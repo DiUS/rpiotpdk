@@ -27,10 +27,28 @@ the same key has been loaded into the user OTP area:
 rpiotpdk -u -l rootfs
 ```
 
+Corresponding OpenSSL commandline (substitute hexkey value as necessary):
+
+```
+openssl kdf -digest sha256 -keylen 32 -kdfopt hexkey:0000000000000000000000000000000000000000000000000000000000000000 -kdfopt info:rootfs -kdfopt hexsalt:0000000000000000 -binary hkdf
+```
+
 
 Derive a key for the label "localfs" which is unique (but predictable) to the
 device:
 
 ```
 rpiotdk -u -s -l localfs
+```
+
+Corresponding OpenSSL commandline (substitute hexsalt with the serial number
+from /proc/cpuinfo, in little-endian order):
+
+```
+openssl kdf -digest sha256 -keylen 32 -kdfopt hexkey:0000000000000000000000000000000000000000000000000000000000000000 -kdfopt info:localfs -kdfopt hexsalt:a8948ead00000010 hkdf -binary
+```
+I.e. for the above example, `grep Serial /proc/cpuinfo | awk '{print $3}'`
+gives `10000000ad8e94a8`. An automatic way of reversing it correctly is via
+```
+grep Serial /proc/cpuinfo  | awk '{print $3}' | grep -o .. | tac | paste -sd ''
 ```
